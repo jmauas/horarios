@@ -41,7 +41,8 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
         totalHoras,
         totalHorasPago: totalHoras * (registro.valorHoraPago || 0),
         totalViaticoPago: registro.valorViaticoPago || 0,
-        total: (totalHoras * (registro.valorHoraPago || 0)) + (registro.valorViaticoPago || 0)
+        totalAdicionalPago: registro.valorAdicionalPago || 0,
+        total: (totalHoras * (registro.valorHoraPago || 0)) + (registro.valorViaticoPago || 0) + (registro.valorAdicionalPago || 0)
       };
     });
   };
@@ -75,6 +76,7 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
       `${item.horas}h ${item.minutos}m`,
       formatearMoneda(item.valorHoraPago),
       formatearMoneda(item.valorViaticoPago),
+      formatearMoneda(item.totalAdicionalPago),
       formatearMoneda(item.total),
       formatearFechaHoraCompleta(item.fechaPago, item.horaPago)
     ]);
@@ -82,10 +84,11 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
     // Generar tabla
     autoTable(doc, {
       startY: 42,
-      head: [['Fecha', 'Horario', 'Horas', 'Valor/Hora', 'Viático', 'Total Día', 'Fecha Pago']],
+      head: [['Fecha', 'Horario', 'Horas', 'Valor/Hora', 'Viático', 'Adicional', 'Total Día', 'Fecha Pago']],
       body: tableData,
       foot: [[
         'TOTAL',
+        '',
         '',
         '',
         '',
@@ -208,6 +211,9 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
                       <div>Horas: {item.horas}h {item.minutos}m</div>
                       <div>Valor/Hora: {formatearMoneda(item.valorHoraPago)}</div>
                       <div>Viático: {formatearMoneda(item.valorViaticoPago)}</div>
+                      {item.totalAdicionalPago > 0 && (
+                        <div>Adicional: {formatearMoneda(item.totalAdicionalPago)}</div>
+                      )}
                       <div className="font-semibold text-green-700">Total: {formatearMoneda(item.total)}</div>
                       <div className="text-xs text-gray-500 mt-2">Pagado: {formatearFechaHoraCompleta(item.fechaPago, item.horaPago)}</div>
                     </div>
@@ -230,6 +236,7 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
                       <th className="px-4 py-2 text-right text-gray-700">Horas</th>
                       <th className="px-4 py-2 text-right text-gray-700">Valor/Hora</th>
                       <th className="px-4 py-2 text-right text-gray-700">Viático</th>
+                      <th className="px-4 py-2 text-right text-gray-700">Adicional</th>
                       <th className="px-4 py-2 text-right text-gray-700">Total Día</th>
                       <th className="px-4 py-2 text-left text-gray-700">Fecha Pago</th>
                     </tr>
@@ -242,6 +249,7 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
                         <td className="px-4 py-2 text-right text-gray-900">{item.horas}h {item.minutos}m</td>
                         <td className="px-4 py-2 text-right text-gray-900">{formatearMoneda(item.valorHoraPago)}</td>
                         <td className="px-4 py-2 text-right text-gray-900">{formatearMoneda(item.valorViaticoPago)}</td>
+                        <td className="px-4 py-2 text-right text-gray-900">{formatearMoneda(item.totalAdicionalPago)}</td>
                         <td className="px-4 py-2 text-right font-semibold text-gray-900">{formatearMoneda(item.total)}</td>
                         <td className="px-4 py-2 text-gray-900 text-sm">{formatearFechaHoraCompleta(item.fechaPago, item.horaPago)}</td>
                       </tr>
@@ -249,7 +257,7 @@ export default function InformePagados({ registros, empleado, pagosRealizados = 
                   </tbody>
                   <tfoot className="bg-indigo-100 font-bold">
                     <tr>
-                      <td colSpan="5" className="px-4 py-3 text-gray-900">TOTAL GENERAL</td>
+                      <td colSpan="6" className="px-4 py-3 text-gray-900">TOTAL GENERAL</td>
                       <td className="px-4 py-3 text-right text-lg text-indigo-700">{formatearMoneda(totalGeneral)}</td>
                       <td></td>
                     </tr>

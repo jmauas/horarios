@@ -42,15 +42,18 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
         registro.horaEgreso
       );
       
+      const totalHorasPago = totalHoras * parseFloat(configuracion.valorHora || 0);
+      const totalViaticoPago = parseFloat(configuracion.valorViatico || 0);
+
       return {
         ...registro,
         horas,
         minutos,
         totalHoras,
         horasDecimal: totalHoras.toFixed(2),
-        totalHorasPago: totalHoras * parseFloat(configuracion.valorHora || 0),
-        totalViaticoPago: parseFloat(configuracion.valorViatico || 0),
-        total: (totalHoras * parseFloat(configuracion.valorHora || 0)) + parseFloat(configuracion.valorViatico || 0)
+        totalHorasPago,
+        totalViaticoPago,
+        total: totalHorasPago + totalViaticoPago
       };
     });
   };
@@ -171,7 +174,7 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
       `${item.horas}h ${item.minutos}m`,
       formatearMoneda(configuracion.valorHora),
       formatearMoneda(item.totalHorasPago),
-      formatearMoneda(configuracion.valorViatico),
+      formatearMoneda(item.totalViaticoPago),
       formatearMoneda(item.total)
     ]);
 
@@ -179,24 +182,36 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
     const totalPorHoras = informe.reduce((sum, item) => sum + item.totalHorasPago, 0);
     const totalPorViatico = informe.reduce((sum, item) => sum + item.totalViaticoPago, 0);
     const totalRegistros = informe.reduce((sum, item) => sum + item.total, 0);
+    const valorAdicionalNum = parseFloat(valorAdicional || 0);
+    const totalGeneral = totalRegistros + valorAdicionalNum;
 
     // Generar tabla
     autoTable(doc, {
       startY: 42,
       head: [['Fecha', 'Horario', 'Horas', 'Valor Hora', 'Total Horas', 'Viático', 'Total Día']],
       body: tableData,
-      foot: [[
-        'TOTAL',
-        '',
-        `${informe.reduce((sum, item) => sum + item.horas, 0)}h ${informe.reduce((sum, item) => sum + item.minutos, 0)}m`,
-        '',
-        formatearMoneda(totalPorHoras),
-        formatearMoneda(totalPorViatico),
-        formatearMoneda(totalRegistros)
-      ]],
+      foot: [
+        [
+          'SUBTOTAL',
+          '',
+          `${informe.reduce((sum, item) => sum + item.horas, 0)}h ${informe.reduce((sum, item) => sum + item.minutos, 0)}m`,
+          '',
+          formatearMoneda(totalPorHoras),
+          formatearMoneda(totalPorViatico),
+          formatearMoneda(totalRegistros)
+        ],
+        [
+          { content: 'IMPORTE ADICIONAL DEL PAGO', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold' } },
+          { content: formatearMoneda(valorAdicionalNum), styles: { fontStyle: 'bold' } }
+        ],
+        [
+          { content: 'TOTAL A PAGAR', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 255, 220] } },
+          { content: formatearMoneda(totalGeneral), styles: { fontStyle: 'bold', fillColor: [220, 255, 220] } }
+        ]
+      ],
       styles: { fontSize: 9 },
       headStyles: { fillColor: [66, 66, 66] },
-      footStyles: { fillColor: [200, 200, 200], fontStyle: 'bold' }
+      footStyles: { fillColor: [200, 200, 200] }
     });
 
     // Guardar PDF
@@ -317,7 +332,7 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
                     <div>Total Horas Seleccionadas: {totalHorasSeleccionadas.toFixed(2)}h</div>
                     <div>Subtotal Registros: {formatearMoneda(totalImporteSeleccionado)}</div>
                     <div className="flex items-center justify-between pt-2 border-t border-gray-300">
-                      <span>Importe Adicional:</span>
+                      <span>IMPORTE ADICIONAL DEL PAGO:</span>
                       <input
                         type="number"
                         value={valorAdicional}
@@ -386,7 +401,7 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
                       <td className="px-4 py-3 text-right text-gray-900">{formatearMoneda(totalImporteSeleccionado)}</td>
                     </tr>
                     <tr>
-                      <td colSpan="8" className="px-4 py-3 text-right text-gray-900">Importe Adicional:</td>
+                      <td colSpan="8" className="px-4 py-3 text-right text-gray-900">IMPORTE ADICIONAL DEL PAGO:</td>
                       <td className="px-4 py-3 text-right">
                         <input
                           type="number"
@@ -397,7 +412,7 @@ export default function Informe({ registros, configuracion, empleado, onRegistro
                       </td>
                     </tr>
                     <tr>
-                      <td colSpan="8" className="px-4 py-3 text-right text-lg text-green-700">TOTAL GENERAL:</td>
+                      <td colSpan="9" className="px-4 py-3 text-right text-lg text-green-700">TOTAL GENERAL:</td>
                       <td className="px-4 py-3 text-right text-lg text-green-700">{formatearMoneda(totalGeneral)}</td>
                     </tr>
                   </tfoot>

@@ -1,31 +1,42 @@
 import fs from 'fs';
 import path from 'path';
-import { sql } from '@vercel/postgres';
+import pg from 'pg';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env.local or .env
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
+const { Pool } = pg;
 const dataDir = path.join(process.cwd(), 'data');
 
 async function migrate() {
-  console.log('Starting migration to Vercel Postgres...');
+  console.log('Starting migration to Supabase Postgres...');
   
-  // Initialize DB (Create tables)
-  // We need to import initDb from lib/db.js but that file uses ES modules and @vercel/postgres
-  // which might be tricky in a standalone script if not transpiled.
-  // For simplicity, we'll just run the CREATE TABLE statements here directly.
-  
+  const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+    ssl: {
+      rejectUnauthorized: false // Required for some Supabase connections
+    }
+  });
+
   try {
-    await sql`
+    const client = await pool.connect();
+    console.log('Connected to database.');
+
+    // Helper for queries
+    const sql = async (text, params) => {
+      return await client.query(text, params);
+    };
+
+    await sql(`
       CREATE TABLE IF NOT EXISTS empleados (
         id SERIAL PRIMARY KEY,
         nombre TEXT UNIQUE NOT NULL
-      );
-    `;
+      )
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS configuracion (
         id SERIAL PRIMARY KEY,
         empleado_id INTEGER NOT NULL,
@@ -33,10 +44,10 @@ async function migrate() {
         valorViatico DECIMAL DEFAULT 0,
         valorAdicional DECIMAL DEFAULT 0,
         FOREIGN KEY(empleado_id) REFERENCES empleados(id) ON DELETE CASCADE
-      );
-    `;
+      )
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS registros (
         id SERIAL PRIMARY KEY,
         empleado_id INTEGER NOT NULL,
@@ -53,10 +64,10 @@ async function migrate() {
         valorAdicionalPago DECIMAL DEFAULT 0,
         original_id TEXT,
         FOREIGN KEY(empleado_id) REFERENCES empleados(id) ON DELETE CASCADE
-      );
-    `;
+      )
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS pagosRealizados (
         id SERIAL PRIMARY KEY,
         empleado_id INTEGER NOT NULL,
@@ -71,18 +82,18 @@ async function migrate() {
         cantidadDias INTEGER,
         original_id TEXT,
         FOREIGN KEY(empleado_id) REFERENCES empleados(id) ON DELETE CASCADE
-      );
-    `;
+      )
+    `);
 
-    await sql`
+    await sql(`
       CREATE TABLE IF NOT EXISTS pagos_registros (
         pago_id INTEGER NOT NULL,
         registro_id INTEGER NOT NULL,
         PRIMARY KEY (pago_id, registro_id),
         FOREIGN KEY(pago_id) REFERENCES pagosRealizados(id) ON DELETE CASCADE,
         FOREIGN KEY(registro_id) REFERENCES registros(id) ON DELETE CASCADE
-      );
-    `;
+      )
+    `);
     
     console.log('Tables created/verified.');
 
@@ -104,11 +115,11 @@ async function migrate() {
       }
 
       // 1. Insert or Get Employee
-      let { rows: empleados } = await sql`SELECT * FROM empleados WHERE nombre = ${nombreEmpleado}`;
+      let { rows: empleados } = await sql('SELECT * FROM empleados WHERE nombre = $1', [nombreEmpleado]);
       let empleado = empleados[0];
       
       if (!empleado) {
-        const { rows: newEmpleados } = await sql`INSERT INTO empleados (nombre) VALUES (${nombreEmpleado}) RETURNING *`;
+        const { rows: newEmpleados } = await sql('INSERT INTO empleados (nombre) VALUES ($1) RETURNING *', [nombreEmpleado]);
         empleado = newEmpleados[0];
         console.log(`Created employee: ${nombreEmpleado}`);
       } else {
@@ -117,17 +128,16 @@ async function migrate() {
 
       // 2. Insert Configuration
       if (content.configuracion) {
-        const { rows: existingConfig } = await sql`SELECT * FROM configuracion WHERE empleado_id = ${empleado.id}`;
+        const { rows: existingConfig } = await sql('SELECT * FROM configuracion WHERE empleado_id = $1', [empleado.id]);
         if (existingConfig.length === 0) {
-          await sql`
+          await sql(`
             INSERT INTO configuracion (empleado_id, valorHora, valorViatico, valorAdicional)
-            VALUES (
-              ${empleado.id},
-              ${content.configuracion.valorHora || 0},
-              ${content.configuracion.valorViatico || 0},
-              0
-            )
-          `;
+            VALUES ($1, $2, $3, 0)
+          `, [
+            empleado.id,
+            content.configuracion.valorHora || 0,
+            content.configuracion.valorViatico || 0
+          ]);
           console.log('Inserted configuration');
         }
       }
@@ -138,33 +148,32 @@ async function migrate() {
       if (content.registros) {
         for (const reg of content.registros) {
           // Check if already exists by original_id to avoid duplicates on re-run
-          const { rows: existing } = await sql`SELECT id FROM registros WHERE original_id = ${reg.id}`;
+          const { rows: existing } = await sql('SELECT id FROM registros WHERE original_id = $1', [reg.id]);
           
           let registroId;
           if (existing.length > 0) {
              registroId = existing[0].id;
           } else {
-            const { rows: inserted } = await sql`
+            const { rows: inserted } = await sql(`
               INSERT INTO registros (
                 empleado_id, fechaIngreso, horaIngreso, fechaEgreso, horaEgreso,
                 temporal, pagado, fechaPago, horaPago, valorHoraPago, valorViaticoPago,
                 valorAdicionalPago, original_id
-              ) VALUES (
-                ${empleado.id},
-                ${reg.fechaIngreso},
-                ${reg.horaIngreso},
-                ${reg.fechaEgreso},
-                ${reg.horaEgreso},
-                ${reg.temporal ? true : false},
-                ${reg.pagado ? true : false},
-                ${reg.fechaPago || null},
-                ${reg.horaPago || null},
-                ${reg.valorHoraPago || null},
-                ${reg.valorViaticoPago || null},
-                0,
-                ${reg.id}
-              ) RETURNING id
-            `;
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12) RETURNING id
+            `, [
+              empleado.id,
+              reg.fechaIngreso,
+              reg.horaIngreso,
+              reg.fechaEgreso,
+              reg.horaEgreso,
+              reg.temporal ? true : false,
+              reg.pagado ? true : false,
+              reg.fechaPago || null,
+              reg.horaPago || null,
+              reg.valorHoraPago || null,
+              reg.valorViaticoPago || null,
+              reg.id
+            ]);
             registroId = inserted[0].id;
           }
           registroMap.set(reg.id, registroId);
@@ -175,44 +184,43 @@ async function migrate() {
       // 4. Insert PagosRealizados and Link
       if (content.pagosRealizados) {
         for (const pago of content.pagosRealizados) {
-          const { rows: existingPago } = await sql`SELECT id FROM pagosRealizados WHERE original_id = ${pago.id}`;
+          const { rows: existingPago } = await sql('SELECT id FROM pagosRealizados WHERE original_id = $1', [pago.id]);
           
           let pagoId;
           if (existingPago.length > 0) {
             pagoId = existingPago[0].id;
           } else {
-            const { rows: insertedPago } = await sql`
+            const { rows: insertedPago } = await sql(`
               INSERT INTO pagosRealizados (
                 empleado_id, fechaPago, horaPago, importeTotal, valorHora, valorViatico,
                 valorAdicional, fechaDesde, fechaHasta, cantidadDias, original_id
-              ) VALUES (
-                ${empleado.id},
-                ${pago.fechaPago},
-                ${pago.horaPago},
-                ${pago.importeTotal},
-                ${pago.valorHora},
-                ${pago.valorViatico},
-                0,
-                ${pago.fechaDesde},
-                ${pago.fechaHasta},
-                ${pago.cantidadDias},
-                ${pago.id}
-              ) RETURNING id
-            `;
+              ) VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $10) RETURNING id
+            `, [
+              empleado.id,
+              pago.fechaPago,
+              pago.horaPago,
+              pago.importeTotal,
+              pago.valorHora,
+              pago.valorViatico,
+              pago.fechaDesde,
+              pago.fechaHasta,
+              pago.cantidadDias,
+              pago.id
+            ]);
             pagoId = insertedPago[0].id;
 
             // Find matching records to link
             // Matching logic: same empleado, pagado=true, fechaPago and horaPago match
-            const { rows: matchingRegistros } = await sql`
+            const { rows: matchingRegistros } = await sql(`
               SELECT id FROM registros 
-              WHERE empleado_id = ${empleado.id} AND pagado = true AND fechaPago = ${pago.fechaPago} AND horaPago = ${pago.horaPago}
-            `;
+              WHERE empleado_id = $1 AND pagado = true AND fechaPago = $2 AND horaPago = $3
+            `, [empleado.id, pago.fechaPago, pago.horaPago]);
 
             for (const reg of matchingRegistros) {
               // Check if link exists
-              const { rows: existingLink } = await sql`SELECT * FROM pagos_registros WHERE pago_id = ${pagoId} AND registro_id = ${reg.id}`;
+              const { rows: existingLink } = await sql('SELECT * FROM pagos_registros WHERE pago_id = $1 AND registro_id = $2', [pagoId, reg.id]);
               if (existingLink.length === 0) {
-                await sql`INSERT INTO pagos_registros (pago_id, registro_id) VALUES (${pagoId}, ${reg.id})`;
+                await sql('INSERT INTO pagos_registros (pago_id, registro_id) VALUES ($1, $2)', [pagoId, reg.id]);
               }
             }
             console.log(`Inserted payment ${pago.id} and linked ${matchingRegistros.length} records`);
@@ -221,8 +229,11 @@ async function migrate() {
       }
     }
     console.log('Migration completed successfully.');
+    client.release();
+    await pool.end();
   } catch (error) {
     console.error('Migration failed:', error);
+    await pool.end();
   }
 }
 

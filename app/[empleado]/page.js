@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useLoading } from '../context/LoadingContext';
 import IngresoEgresoRapido from '../components/IngresoEgresoRapido';
 import ListaRegistros from '../components/ListaRegistros';
 import ModalFormulario from '../components/ModalFormulario';
@@ -12,6 +13,7 @@ export default function EmpleadoPage() {
   const params = useParams();
   const router = useRouter();
   const empleado = params.empleado;
+  const { showLoader, hideLoader } = useLoading();
   
   const [registros, setRegistros] = useState([]);
   const [configuracion, setConfiguracion] = useState({ valorHora: 0, valorViatico: 0 });
@@ -26,6 +28,7 @@ export default function EmpleadoPage() {
   }, [empleado]);
 
   const cargarDatos = async () => {
+    showLoader();
     try {
       const response = await fetch(`/api/registros?empleado=${empleado}`);
       const datos = await response.json();
@@ -34,6 +37,8 @@ export default function EmpleadoPage() {
       setPagosRealizados(datos.pagosRealizados || []);
     } catch (error) {
       console.error('Error al cargar datos:', error);
+    } finally {
+      hideLoader();
     }
   };
 

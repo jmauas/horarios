@@ -24,22 +24,53 @@ export async function GET(request) {
 
   // 2. Obtener configuración
   const { rows: configs } = await sql`SELECT * FROM configuracion WHERE empleado_id = ${empleado.id}`;
-  const configuracion = configs[0];
+  const rawConfig = configs[0];
+  
+  // Map lowercase DB columns to camelCase
+  const configuracion = rawConfig ? {
+    id: rawConfig.id,
+    empleado_id: rawConfig.empleado_id,
+    valorHora: rawConfig.valorhora,
+    valorViatico: rawConfig.valorviatico,
+    valorAdicional: rawConfig.valoradicional
+  } : null;
 
   // 3. Obtener registros
-  const { rows: registros } = await sql`SELECT * FROM registros WHERE empleado_id = ${empleado.id} ORDER BY fechaIngreso DESC, horaIngreso DESC`;
+  const { rows: registrosRaw } = await sql`SELECT * FROM registros WHERE empleado_id = ${empleado.id} ORDER BY fechaIngreso DESC, horaIngreso DESC`;
   
-  registros.forEach(r => {
-    // Postgres returns booleans correctly, no need to convert 0/1
-    // But we might want to ensure id is string for frontend consistency
-    r.id = r.id.toString(); 
-  });
+  const registros = registrosRaw.map(r => ({
+    id: r.id.toString(),
+    empleado_id: r.empleado_id,
+    fechaIngreso: r.fechaingreso,
+    horaIngreso: r.horaingreso,
+    fechaEgreso: r.fechaegreso,
+    horaEgreso: r.horaegreso,
+    temporal: r.temporal,
+    pagado: r.pagado,
+    fechaPago: r.fechapago,
+    horaPago: r.horapago,
+    valorHoraPago: r.valorhorapago,
+    valorViaticoPago: r.valorviaticopago,
+    valorAdicionalPago: r.valoradicionalpago,
+    original_id: r.original_id
+  }));
 
   // 4. Obtener pagos realizados
-  const { rows: pagosRealizados } = await sql`SELECT * FROM pagosRealizados WHERE empleado_id = ${empleado.id} ORDER BY fechaPago DESC, horaPago DESC`;
-  pagosRealizados.forEach(p => {
-    p.id = p.id.toString();
-  });
+  const { rows: pagosRaw } = await sql`SELECT * FROM pagosRealizados WHERE empleado_id = ${empleado.id} ORDER BY fechaPago DESC, horaPago DESC`;
+  const pagosRealizados = pagosRaw.map(p => ({
+    id: p.id.toString(),
+    empleado_id: p.empleado_id,
+    fechaPago: p.fechapago,
+    horaPago: p.horapago,
+    importeTotal: p.importetotal,
+    valorHora: p.valorhora,
+    valorViatico: p.valorviatico,
+    valorAdicional: p.valoradicional,
+    fechaDesde: p.fechadesde,
+    fechaHasta: p.fechahasta,
+    cantidadDias: p.cantidaddias,
+    original_id: p.original_id
+  }));
 
   return NextResponse.json({
     empleado: nombreEmpleado,
@@ -113,10 +144,6 @@ export async function PUT(request) {
     const { rows: configs } = await sql`SELECT * FROM configuracion WHERE empleado_id = ${empleado.id}`;
     const config = configs[0];
 
-    // Transaction logic is different in @vercel/postgres (it doesn't have explicit transaction object like better-sqlite3)
-    // But we can just execute queries sequentially for now or use BEGIN/COMMIT if needed.
-    // For simplicity in this context, we'll execute sequentially.
-    
     // 1. Crear pago realizado
     const { rows: pagos } = await sql`
       INSERT INTO pagosRealizados (
