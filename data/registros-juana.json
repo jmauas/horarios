@@ -1,0 +1,188 @@
+{
+  "empleado": "juana",
+  "registros": [
+    {
+      "fechaIngreso": "2025-10-08",
+      "horaIngreso": "09:30",
+      "fechaEgreso": "2025-10-08",
+      "horaEgreso": "16:50",
+      "temporal": false,
+      "id": "1760036760106",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-10-15",
+      "horaPago": "13:55",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3000
+    },
+    {
+      "fechaIngreso": "2025-10-17",
+      "horaIngreso": "09:02",
+      "fechaEgreso": "2025-10-17",
+      "horaEgreso": "15:09",
+      "temporal": false,
+      "id": "1760703557552",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-10-20",
+      "horaPago": "12:29",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3000
+    },
+    {
+      "fechaIngreso": "2025-10-21",
+      "horaIngreso": "09:30",
+      "fechaEgreso": "2025-10-21",
+      "horaEgreso": "13:57",
+      "temporal": false,
+      "id": "1761049848540",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-10-28",
+      "horaPago": "12:50",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3000
+    },
+    {
+      "fechaIngreso": "2025-10-23",
+      "horaIngreso": "08:58",
+      "fechaEgreso": "2025-10-23",
+      "horaEgreso": "13:58",
+      "temporal": false,
+      "id": "1761220815724",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-10-28",
+      "horaPago": "12:50",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3000
+    },
+    {
+      "fechaIngreso": "2025-11-04",
+      "horaIngreso": "09:00",
+      "fechaEgreso": "2025-11-04",
+      "horaEgreso": "15:45",
+      "temporal": true,
+      "id": "1762258962939",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-11-11",
+      "horaPago": "11:47",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3500
+    },
+    {
+      "fechaIngreso": "2025-11-07",
+      "horaIngreso": "09:00",
+      "fechaEgreso": "2025-11-07",
+      "horaEgreso": "13:07",
+      "temporal": false,
+      "id": "1762528111992",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-11-11",
+      "horaPago": "11:47",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3500
+    },
+    {
+      "fechaIngreso": "2025-11-13",
+      "horaIngreso": "09:10",
+      "fechaEgreso": "2025-11-13",
+      "horaEgreso": "14:39",
+      "temporal": true,
+      "id": "1763037154925",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-11-15",
+      "horaPago": "13:58",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3500
+    },
+    {
+      "fechaIngreso": "2025-11-14",
+      "horaIngreso": "08:51",
+      "fechaEgreso": "2025-11-14",
+      "horaEgreso": "14:44",
+      "temporal": false,
+      "id": "1763121116658",
+      "pagado": true,
+      "empleado": "juana",
+      "fechaPago": "2025-11-15",
+      "horaPago": "13:58",
+      "valorHoraPago": 5650,
+      "valorViaticoPago": 3500
+    },
+    {
+      "fechaIngreso": "2025-11-18",
+      "horaIngreso": "09:38",
+      "fechaEgreso": "2025-11-18",
+      "horaEgreso": "15:26",
+      "temporal": false,
+      "id": "1763469520841",
+      "pagado": false,
+      "empleado": "juana"
+    }
+  ],
+  "configuracion": {
+    "valorHora": 5650,
+    "valorViatico": 3500
+  },
+  "pagosRealizados": [
+    {
+      "id": "1760547333872",
+      "fechaPago": "2025-10-15",
+      "horaPago": "13:55",
+      "importeTotal": 44433.33333333333,
+      "valorHora": 5650,
+      "valorViatico": 3000,
+      "fechaDesde": "2025-10-08",
+      "fechaHasta": "2025-10-08",
+      "cantidadDias": 1
+    },
+    {
+      "id": "1760974189428",
+      "fechaPago": "2025-10-20",
+      "horaPago": "12:29",
+      "importeTotal": 37559.166666666664,
+      "valorHora": 5650,
+      "valorViatico": 3000,
+      "fechaDesde": "2025-10-17",
+      "fechaHasta": "2025-10-17",
+      "cantidadDias": 1
+    },
+    {
+      "id": "1761666629291",
+      "fechaPago": "2025-10-28",
+      "horaPago": "12:50",
+      "importeTotal": 59392.5,
+      "valorHora": 5650,
+      "valorViatico": 3000,
+      "fechaDesde": "2025-10-21",
+      "fechaHasta": "2025-10-23",
+      "cantidadDias": 2
+    },
+    {
+      "id": "1762872420353",
+      "fechaPago": "2025-11-11",
+      "horaPago": "11:47",
+      "importeTotal": 68396.66666666666,
+      "valorHora": 5650,
+      "valorViatico": 3500,
+      "fechaDesde": "2025-11-04",
+      "fechaHasta": "2025-11-07",
+      "cantidadDias": 2
+    },
+    {
+      "id": "1763225937424",
+      "fechaPago": "2025-11-15",
+      "horaPago": "13:58",
+      "importeTotal": 71221.66666666666,
+      "valorHora": 5650,
+      "valorViatico": 3500,
+      "fechaDesde": "2025-11-13",
+      "fechaHasta": "2025-11-14",
+      "cantidadDias": 2
+    }
+  ]
+}
