@@ -103,6 +103,7 @@ export default function EmpleadoPage() {
           empleado={empleado}
           onRegistroEliminado={cargarDatos}
           onEditarRegistro={handleEditarRegistro}
+          onActualizar={cargarDatos}
         />
 
         <Informe 

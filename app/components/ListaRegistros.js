@@ -4,7 +4,7 @@ import { formatearFecha, formatearHora, formatearFechaConDia } from '../utils/fo
 import { ModalConfirmacion } from './Modal';
 import { useState } from 'react';
 
-export default function ListaRegistros({ registros, empleado, onRegistroEliminado, onEditarRegistro }) {
+export default function ListaRegistros({ registros, empleado, onRegistroEliminado, onEditarRegistro, onActualizar }) {
   const [modalConfirm, setModalConfirm] = useState({ isOpen: false, id: null });
   const [mostrarTodos, setMostrarTodos] = useState(false);
 
@@ -50,14 +50,23 @@ export default function ListaRegistros({ registros, empleado, onRegistroEliminad
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-700">
           Registros {mostrarTodos ? `(${registros.length})` : `(${Math.min(5, registros.length)} de ${registros.length})`}
         </h2>
-        {registros.length > 5 && (
+        <div className="flex gap-2">
           <button
-            onClick={() => setMostrarTodos(!mostrarTodos)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-semibold inline-flex items-center gap-2"
+            onClick={onActualizar}
+            className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-semibold"
+            title="Actualizar registros"
           >
-            {mostrarTodos ? '👁️ Ver Menos' : '📋 Ver Todos'}
+            🔄
           </button>
-        )}
+          {registros.length > 5 && (
+            <button
+              onClick={() => setMostrarTodos(!mostrarTodos)}
+              className="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-semibold"
+            >
+              {mostrarTodos ? '👁️ Menos' : '📋 Todos'}
+            </button>
+          )}
+        </div>
       </div>
       {registros.length === 0 ? (
         <p className="text-gray-600 text-center py-8">No hay registros</p>
